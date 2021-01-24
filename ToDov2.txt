@@ -1,0 +1,19 @@
+Weasley Clock Overhaul 1/22/21
+
+x Create-React-App
+x install Typescript
+x Recreate Main Page layout
+  x Create new component and render something
+  x render Main Page Layout
+x render circle on clockFace
+- render point in center of circle
+- render point on edge of circle
+- render line from center to point on edge
+
+
+-reseed DB
+  - create script to reseed db
+
+
+Design Thoughts:
+Nav col expands on hover, when item is selected, new component grid-col 1 / 3 grid-row 
