@@ -6,6 +6,38 @@ x Recreate Main Page layout
   x Create new component and render something
   x render Main Page Layout
 x render circle on clockFace
+
+- Layout nav panel
+  x Add nav links (Home, Clock, Friends, Locations, Adventures)
+
+- Layout Tool Panels
+  x Locations
+    x Render Divs with Names
+    x Last box is default to add new location
+  x Friends
+
+- Create Nav Panel Functionality
+  - components can move on page based on what is being used
+    x attempt to pass prop to styled-component
+    x research :focus 
+    x navPanel onClick displays proper toolPanel
+      x pass onClick to NavPanel
+      x onClick can grab link name
+      x create state to control tool panel display in MainPage
+      x tool panel is not rendered unless a tool is selected
+      x pass state to Tool Panel to render proper tool
+      x create button to close tool panel
+
+- Create Clock Face Functionality
+  x render circle
+  - render points on circle
+    - render labels with points
+  x render arm
+
+
+- Layout Activity Feed
+  - Render dummy activity update
+
 - render point in center of circle
 - render point on edge of circle
 - render line from center to point on edge

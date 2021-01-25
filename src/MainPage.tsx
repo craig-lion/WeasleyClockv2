@@ -1,11 +1,78 @@
 import React, {useState} from "react";
 import styled from "styled-components";
 import Clock from "./Clock";
+import NavPanel from "./NavPanel";
+import ToolPanel from "./ToolPanel";
 
 
 
 const MainPage = () => {
-  const [testColor, setTestColor] = useState("yellow");
+  const [activeTool, setActiveTool] = useState("none");
+
+  interface ReactMouseEvent extends EventTarget {
+  id: string
+}
+
+interface MouseEvent extends React.MouseEvent<HTMLElement> {
+  target: ReactMouseEvent
+}
+
+  const navigate = (e: MouseEvent):void => {
+    e.preventDefault()
+    setActiveTool(e.target.id)
+  }
+
+  const setTopBarCol = () => {
+    if (activeTool === "none") { return `1 / 3`}
+  }
+
+  const navPanelProps = {
+    navigate,
+  }
+
+  const toolBarProps = {
+    activeTool,
+    setActiveTool
+  }
+
+  const renderNavPanelContainer = () => {
+    if (activeTool === "none") {
+      return (
+        <NavPanelContainer>
+          <NavPanel {...navPanelProps} />
+        </NavPanelContainer>
+      );
+    }
+  }
+
+    const renderToolPanel = () => {
+    switch (activeTool) {
+      case "none":
+        break;
+      case "friends":
+      case "locations":
+      case "adventures":
+        return (
+          <ToolPanelContainer>
+            <ToolPanel {...toolBarProps}/>
+          </ToolPanelContainer>
+        );
+    }
+  }
+
+  return (
+    <MainContainer>
+      {renderNavPanelContainer()}
+      {renderToolPanel()}
+      <RightSideContainer>Activity Feed Here</RightSideContainer>
+      <TopBarContainer grid-column={setTopBarCol()}>Dis Be D Top Bar</TopBarContainer>
+      <ClockContainer>
+        <Clock />
+      </ClockContainer>
+    </MainContainer>
+  )
+  
+}
 
   const MainContainer = styled.div`
     background-color: blue;
@@ -17,9 +84,10 @@ const MainPage = () => {
   `;
 
   const NavPanelContainer = styled.div`
-    background-color: ${testColor};
+    background-color: yellow;
     grid-column: 1 / 2;
     grid-row: 1 / -1;
+    z-index: 1;
 
     &:hover {
       background-color: green;
@@ -28,26 +96,22 @@ const MainPage = () => {
     }
   `;
 
-  const FeaturesContainer = styled.div`
+  const ToolPanelContainer = styled.div`
     background-color: lawngreen;
     grid-row: 2 / -1;
-    grid-column: 2 / 3;
-
-    &:hover {
-      grid-column: 1 / 3;
-      z-index: 3;
-    }
+    grid-column: 1 / 3;
   `;
   const RightSideContainer = styled.div`
     background-color: orange;
     grid-row: 1 / -1;
     grid-column: right-sidebar-closed / 9;
+    z-index: 1;
   `;
   const TopBarContainer = styled.div`
     background-color: purple;
     grid-row: 1 / 2;
-    grid-column: 2 / 8;
-    z-index: 1;
+    grid-column: 1 / 9;
+    z-index: 0;
   `;
   const ClockContainer = styled.div`
     background-color: pink;
@@ -55,22 +119,5 @@ const MainPage = () => {
     grid-row: 2 / -1;
 
   `;
-
-  return (
-    <MainContainer>
-      <NavPanelContainer>Nav Panel header</NavPanelContainer>
-      <FeaturesContainer>
-        Features In Hurr Fam
-      </FeaturesContainer>
-      <RightSideContainer>Activity Feed Here</RightSideContainer>
-      <TopBarContainer>Dis Be D Top Bar</TopBarContainer>
-      <ClockContainer>
-        <Clock />
-      </ClockContainer>
-    </MainContainer>
-  )
-  
-}
-
 
 export default MainPage;
