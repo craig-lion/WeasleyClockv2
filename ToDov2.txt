@@ -7,17 +7,17 @@ x Recreate Main Page layout
   x render Main Page Layout
 x render circle on clockFace
 
-- Layout nav panel
+x Layout nav panel
   x Add nav links (Home, Clock, Friends, Locations, Adventures)
 
-- Layout Tool Panels
+x Layout Tool Panels
   x Locations
     x Render Divs with Names
     x Last box is default to add new location
   x Friends
 
-- Create Nav Panel Functionality
-  - components can move on page based on what is being used
+x Create Nav Panel Functionality
+  x components can move on page based on what is being used
     x attempt to pass prop to styled-component
     x research :focus 
     x navPanel onClick displays proper toolPanel
@@ -28,24 +28,65 @@ x render circle on clockFace
       x pass state to Tool Panel to render proper tool
       x create button to close tool panel
 
-- Create Clock Face Functionality
+x Create Clock Face Details
   x render circle
-  - render points on circle
-    - render labels with points
+  x render points on circle
+    x render labels with points
+    x locations update when items are added or removed
+    x arm updates based on current location
   x render arm
+
+- Create State For Locations & currentLocation
+  x locations state in MainPage
+  x currentLocation state in MainPage
+  x pass locations to ToolPanel + Locations Tool
+  x pass currentLocation to ToolPanel + Locations Tool
+  x pass locations to Clock
+  x pass currentLocation to Clock
+  - updating locations state updates clock
+    x add location updates locations array
+      x can I render an input inside of an li - YES
+      x input has "add location" placeholder and transparent background
+      x input updates text onChange
+      x onClick updates setLocations
+        x onClick captures newLocation
+        x onClick modifies locations array and calls setLocations
+        x onClick clears search bar when location is added
+  x updating currentLocation state updates clock
+    x onClick captures click value
+    x create state value for togglePopup
+    x onClick toggles popup to true
+    x renders popup onClick to ask if currentLocation or delete
+      x create popup element
+      x popup ele has two buttons
+        x one removes location
+        x additional popup if removing currentLocation
+          x create state for RemoveCurrentLocation
+        x one sets location to currentLocation
+
+- Create State for friendLocations
+  - state lives on MainPage
+
+- Add functionality to friends Tool
+  x list of current friends
+  x state for FriendsList
+  x const for allFriends in useEffect
+  x can remove friend onClick
+  x confirmation window before remove
+    x create popup component
+  x can search for new friends
+  x can add new friend onClick
+    x confirmation window before add friend
+    x autocomplete all userNames
+
 
 
 - Layout Activity Feed
   - Render dummy activity update
-
-- render point in center of circle
-- render point on edge of circle
-- render line from center to point on edge
-
 
 -reseed DB
   - create script to reseed db
 
 
 Design Thoughts:
-Nav col expands on hover, when item is selected, new component grid-col 1 / 3 grid-row 
+
