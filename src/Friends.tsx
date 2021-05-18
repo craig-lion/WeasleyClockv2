@@ -1,148 +1,302 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
+import { useQuery, gql, useMutation } from "@apollo/client";
 import styled from "styled-components";
-// import Autocomplete from "../node_modules/react-autocomplete/build/lib/Autocomplete";
+import { User } from "./MainPage";
 
-const Autocomplete = require('react-autocomplete')
-
+// TODO - Display pending friends in different color on top
 interface friendsProps {
-  sharedFriends: any;
-  setSharedFriends: any;
+  userName: string | null;
+  friends: User[];
+  pendingFriends: User[];
+  setPendingFriends: React.Dispatch<React.SetStateAction<User[]>>;
 }
 
-const Friends:React.FC<friendsProps> = () => {
-  let [friendsList, setFriendsList] = useState(["Lion", "Jobbie", "Liandra", "Hails"]);
-  const [newFriend, setNewFriend] = useState("");
+// interface AllUsersData {
+//   allUsers: User[];
+// }
+
+interface NotFriendsData {
+  userNotFriends: User[];
+}
+
+class CreateFriendRequestInput {
+  recipient: number;
+  constructor(recipient: number) {
+    this.recipient = recipient;
+  }
+}
+
+//GQL QUERY/MUTATION
+// const GET_ALL_USERS = gql`
+//   query AllUsers {
+//     allUsers {
+//       name
+//     }
+//   }
+// `;
+
+const GET_NOT_FRIENDS = gql`
+  query UserNotFriends {
+    userNotFriends {
+      name
+      id
+    }
+  }
+`;
+
+// const UPDATE_FRIEND_REQUEST = gql`
+//   mutation updateFriendRequest($id:Number!, $status:String!){
+//     updateFriendRequest(id: $id, status: $status ){
+//       id
+//       recipient{name}
+//       status
+//     }
+//   }
+// `;
+
+const CREATE_FRIEND_REQUEST = gql`
+  mutation createFriendRequest($createFriendRequestInput: CreateFriendRequestInput!) {
+    createFriendRequest(createFriendRequestInput: $createFriendRequestInput) {
+      createdBy {
+        name
+      }
+      recipient {
+        name
+      }
+    }
+  }
+`;
+//GQL QUERY/MUTATION
+
+const Friends: React.FC<friendsProps> = (props) => {
+  const [newFriend, setNewFriend] = useState<User>();
   const [oldFriend, setOldFriend] = useState("");
-  const [allFriends, setAllFriends] = useState([""])
+  const [notFriends, setNotFriends] = useState<User[]>([]);
   const [popupRemove, setPopupRemove] = useState(false);
   const [popupAdd, setPopupAdd] = useState(false);
+  const { friends, pendingFriends, setPendingFriends } = props;
+
+  // GQL Query/Mutations
+  // const { loading: usersLoading, data: usersData } = useQuery<AllUsersData>(
+  //   GET_ALL_USERS
+  // );
+  const {
+    loading: notFriendsLoading,
+    data: notFriendsData,
+  } = useQuery<NotFriendsData>(GET_NOT_FRIENDS);
+  console.log("Loading NotFriends: ", notFriendsLoading);
+  const [createFriendRequest, { data: createFriendData }] = useMutation(
+    CREATE_FRIEND_REQUEST
+  );
+  // GQL Query/Mutations
 
   useEffect(() => {
-    setAllFriends(["Lion", "Jobbie", "Liandra", "Hails","Mark", "Jackeye", "Ruthie", "Jesse", "Dan", "Courtney"]);
-  },[])
+    if (notFriendsData) {
+      // console.log(
+      //   "this is usersData in FriendsCompnent UseEffect: ",
+      //   notFriendsData
+      // );
+      setNotFriends(notFriendsData.userNotFriends);
+    }
+  }, [notFriendsData]);
 
-  const makeItemsArray = () => {
-    const notFriends = allFriends.filter( (item) => {
-      return friendsList.indexOf(item) === -1;
-    });
 
-
-    return notFriends.map(name => {
-      let obj = { label: "" };
-      obj.label = name;
-      return obj
-    })
-
-  }
-
-  const addFriend = (e: any) => {
-    setFriendsList([...friendsList, newFriend]);
-    console.log("Friend Added");
-    setPopupAdd(false)
+  const createAddWarning: React.ReactEventHandler<HTMLSelectElement> = (
+    e: React.MouseEvent<HTMLSelectElement, MouseEvent>
+  ) => {
+    // Grab
+    console.log("this is event", (e.target as HTMLSelectElement).value);
+    for (let i = 0; i < notFriends.length; i++) {
+      if (notFriends[i].id === Number.parseInt((e.target as HTMLSelectElement).value)) {
+        console.log('notFriends[i]: ', notFriends[i])
+        const friendObj: User = notFriends[i];
+        console.log('friendObj in add: ', friendObj)
+        setNewFriend(friendObj);
+        break;
+      }
+    }
+    setPopupAdd(true);
   };
 
-  const removeFriend = () => {
-    setFriendsList(friendsList.filter(friend => friend !== oldFriend));
-    setPopupRemove(false)
+  const addFriend: React.MouseEventHandler<HTMLButtonElement> = async () => {
+    // Update DB
+    if (newFriend) {
+      const createFriendRequestInput = new CreateFriendRequestInput(
+        newFriend.id
+      );
+
+      console.log(
+        "this is createFriendRequestInput: ",
+        createFriendRequestInput
+      );
+
+      const res = await createFriendRequest({
+        variables: { createFriendRequestInput: createFriendRequestInput },
+      });
+      if (res) { 
+        setPendingFriends([...friends, newFriend]);
+        alert(`Request Sent to ${newFriend.name}`);
+        setPopupAdd(false);
+      } else {console.error('Failed to Add Friend')}
+    } else {
+      console.error("No New Friend Found");
+    }
+  };
+
+  const removeFriend: React.MouseEventHandler<HTMLButtonElement> = async () => {
+    // TODO - remove Friend handle in DB
+    // setFriends(friends.filter((friend: string) => friend !== oldFriend));
+    setPopupRemove(false);
     console.log("Friend Removed");
   };
 
-
-  const createRemoveWarning = (e: any) => {
-    console.log(e.target.getAttribute("value"), "value")
-    setOldFriend(e.target.getAttribute("value"))
+  const createRemoveWarning: React.MouseEventHandler<HTMLLIElement> = (
+    e: React.MouseEvent<HTMLLIElement, MouseEvent>
+  ) => {
+    // console.log((e.target as HTMLLIElement).getAttribute("value"), "value");
+    const oldFriendString = (e.target as HTMLLIElement).getAttribute("value");
+    if (typeof oldFriendString === "string") {
+      setOldFriend(oldFriendString);
+    } else {
+      console.error("Could Not Find Friend Element");
+    }
     setPopupRemove(true);
-    ;}
-
-  const createAddWarning = (value:string) => {
-    setNewFriend(value);
-    setPopupAdd(true)
   };
 
-// TODO: Search should clear after name is selected
+  const DropDown = (): JSX.Element => {
+    const createOptions = () => {
+      return notFriends.map((friend) => {
+        return (
+          <Option key={friend.name} value={friend.id}>
+            {friend.name}
+          </Option>
+        );
+      });
+    };
 
-  // const changeFriend = (e: any) => setNewFriend(e.target.getAttribute("value"));
+    // console.log('these are createOptions', createOptions())
 
-  const renderAutocomplete = () => {
-            return (<Autocomplete
-              getItemValue={(item: any) => item.label}
-              items={makeItemsArray()}
-              renderItem={(item: any, isHighlighted: any) => (
-                <div
-                  style={{ background: isHighlighted ? "lightgray" : "white" }}
-                >
-                  {item.label}
-                </div>
-              )}
-              value={newFriend}
-              // onChange={changeFriend}
-              onSelect={createAddWarning}
-            />
-            )}
+    return (
+      <Select onChange={createAddWarning}>
+        <Option key="DefaultOption">Add New Friend</Option>
+        {createOptions()}
+      </Select>
+    );
+  };
 
-  const FriendsList = (): JSX.Element => {
+  const PendingFriendsList = (): JSX.Element => {
     return (
       <ul>
-        {friendsList.map((friend) => (
-          <li
-            key={friend}
-            value={friend}
-            onClick={createRemoveWarning}
-          >
-            {friend}
+        <p>Pending Friends</p>
+        {pendingFriends.map((friend: User) => (
+          <li key={friend.id} value={friend.name} color={"blue"}>
+            {friend.name}
           </li>
         ))}
-        <li>
-          {renderAutocomplete()}
-        </li>
       </ul>
     );
   };
 
-  const renderFriendsTool = () => {
+  const FriendsList = (): JSX.Element => {
+    return (
+      <ul>
+        {DropDown()}
+        {friends.map((friend: User) => (
+          <li key={friend.id} value={friend.name} onClick={createRemoveWarning}>
+            {friend.name}
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
+  const renderFriendsTool = (): JSX.Element => {
     if (popupRemove) {
       return (
+        <FriendsContainer>
         <Popup>
           <PopupText>Are You Sure You Want to to remove {oldFriend}?</PopupText>
           <PopupButton onClick={removeFriend}>Remove</PopupButton>
-          <PopupButton onClick ={() => setPopupRemove(false)}>Cancel</PopupButton>
-        </Popup>
-      )
+          <PopupButton onClick={() => setPopupRemove(false)}>
+            Cancel
+          </PopupButton>
+          </Popup>
+        </FriendsContainer>
+      );
     }
     if (popupAdd) {
       return (
+        <FriendsContainer>
         <Popup>
-          <PopupText>Are You Sure You Want to to add {newFriend} as a  friend?</PopupText>
+          <PopupText>
+            Are You Sure You Want to to add {newFriend?.name} as a friend?
+          </PopupText>
           <PopupButton onClick={addFriend}>Add</PopupButton>
           <PopupButton onClick={() => setPopupAdd(false)}>Cancel</PopupButton>
-        </Popup>
-      )
-    }
-    else {
+          </Popup>
+        </FriendsContainer>
+      );
+    } else {
       return (
-        <FriendsList />
+        <FriendsContainer>
+          <PendingFriendsList />  
+          <FriendsList />
+        </FriendsContainer>
       )
     }
-  }
+  };
 
   return (
     <FriendsMain>
-      <p>Friends</p>
-      <FriendsContainer>
-        {renderFriendsTool()}
-      </FriendsContainer>
+      <FriendsTitle>Friends</FriendsTitle>
+      <FriendsContainer>{renderFriendsTool()}</FriendsContainer>
     </FriendsMain>
   );
 };
 
-  const FriendsMain = styled.div``;
-  const FriendsContainer = styled.div`
+const FriendsMain = styled.div`
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* border: 2px solid yellow; */
+`;
+
+const FriendsTitle = styled.h2`
+  flex: 1;
+  /* border: 2px solid purple; */
+  width: 100%;
+  border-bottom: 1px solid tan;
+`;
+
+const FriendsContainer = styled.div`
+  flex: 9;
+  /* border: 2px solid teal; */
+  width: 100%;
+  & ul {
+    list-style: none;
+    padding: 0;
+
     & li {
-      list-style: none;
       cursor: pointer;
-      border: 2px solid black;
+      /* border: 2px solid black; */
     }
-  `;
+  }
+`;
+
+const Select = styled.select`
+  background-color: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  appearance: none;
+`;
+const Option = styled.option`
+  background-color: inherit;
+  font-family: inherit;
+`;
 
 const Popup = styled.div``;
 const PopupText = styled.div``;

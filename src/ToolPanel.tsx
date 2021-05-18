@@ -2,18 +2,21 @@ import React from "react";
 import styled from "styled-components";
 import Locations from "./Locations";
 import Friends from "./Friends";
+import { User, Location } from "./MainPage";
 
-// TODO: what is the proper way to type setActiveTool fn
 
 interface toolBarProps {
   activeTool: string;
-  setActiveTool: any;
-  locations: string[];
-  setLocations: any;
-  currentLocation: string;
-  setCurrentLocation: any;
-  sharedFriends: any;
-  setSharedFriends: any;
+  setActiveTool: React.Dispatch<React.SetStateAction<string>>;
+  locations: Location[];
+  setLocations: React.Dispatch<React.SetStateAction<Location[]>>;
+  currentLocation: Location;
+  setCurrentLocation: React.Dispatch<React.SetStateAction<Location>>;
+  friends: User[];
+  setFriends: React.Dispatch<React.SetStateAction<User[]>>;
+  pendingFriends: User[];
+  setPendingFriends: React.Dispatch<React.SetStateAction<User[]>>;
+  userName: string | null;
 }
 
 const ToolPanel: React.FC<toolBarProps> = (props) => {
@@ -24,8 +27,11 @@ const ToolPanel: React.FC<toolBarProps> = (props) => {
     setLocations,
     currentLocation,
     setCurrentLocation,
-    sharedFriends,
-    setSharedFriends,
+    friends,
+    setFriends,
+    pendingFriends,
+    setPendingFriends,
+    userName,
   } = props;
 
   const locationProps = {
@@ -37,8 +43,11 @@ const ToolPanel: React.FC<toolBarProps> = (props) => {
   };
 
   const friendsProps = {
-    sharedFriends,
-    setSharedFriends,
+    userName,
+    friends,
+    setFriends,
+    pendingFriends,
+    setPendingFriends,
   };
 
   const closeWindow = () => {
@@ -76,11 +85,16 @@ const ToolPanelMain = styled.div`
 `;
 
 const Button = styled.button`
-  background-color: slateblue;
+  background-color: transparent;
+  border: 1px solid;
+  box-shadow: 1px 1px 2px 1px;
+  font-family: inherit;
+  font-size: inherit;
+  color: #e6ccb2;
   position: absolute;
-  top: 0;
-  right: 0;
-  height: 20px;
-  width: 50px;
+  bottom: 0;
+  left: 0;
+  height: auto;
+  width: auto;
 `;
 export default ToolPanel;

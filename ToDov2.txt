@@ -43,7 +43,7 @@ x Create Clock Face Details
   x pass currentLocation to ToolPanel + Locations Tool
   x pass locations to Clock
   x pass currentLocation to Clock
-  - updating locations state updates clock
+  x updating locations state updates clock
     x add location updates locations array
       x can I render an input inside of an li - YES
       x input has "add location" placeholder and transparent background
@@ -64,10 +64,10 @@ x Create Clock Face Details
           x create state for RemoveCurrentLocation
         x one sets location to currentLocation
 
-- Create State for friendLocations
-  - state lives on MainPage
+x Create State for friendLocations
+  x state lives on MainPage
 
-- Add functionality to friends Tool
+x Add functionality to friends Tool
   x list of current friends
   x state for FriendsList
   x const for allFriends in useEffect
@@ -79,10 +79,29 @@ x Create Clock Face Details
     x confirmation window before add friend
     x autocomplete all userNames
 
-
+-Create Login Page
+  - Render component
+    x input for user and pass 
+    x buttons for login and createNewUser
+    - login button properly checks pass
+    - error message if incorrect pass
+    - createNewUser makes new user
+  - Authenticate User
+    - MainPage has useQuery for user
+  x Pass
+    x stored as hash
 
 - Layout Activity Feed
-  - Render dummy activity update
+  - Render updateContainer
+    - useQuery to look for friends.currentLocation
+      x updateBox for currentLocation
+      - if currentLocation has changed create new activity update
+  - Render requestContainer
+    - useQuery for friendRequests
+    x if pending request create container
+    - if recently accepted request create update
+    - requestContainer 
+  
 
 -reseed DB
   - create script to reseed db

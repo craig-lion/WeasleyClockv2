@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@apollo/client": "^3.3.13",
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.3",
     "@testing-library/user-event": "^12.6.2",
+    "@types/randomcolor": "^0.5.5",
     "axios": "^0.21.1",
+    "express-jwt": "^6.0.0",
+    "graphql": "^15.5.0",
+    "randomcolor": "^0.6.2",
     "react": "^17.0.1",
     "react-autocomplete": "^1.8.1",
     "react-dom": "^17.0.1",
@@ -19,7 +24,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "build:watch": "npm run build -- -w"
   },
   "eslintConfig": {
     "extends": [
@@ -40,6 +46,8 @@
     ]
   },
   "devDependencies": {
+    "@svgr/core": "^5.5.0",
+    "@types/graphql": "^14.5.0",
     "@types/react-autocomplete": "^1.8.5",
     "@types/styled-components": "^5.1.7"
   }
