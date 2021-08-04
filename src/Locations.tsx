@@ -1,36 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useMutation, gql, useQuery } from "@apollo/client";
+import { useMutation, gql, useQuery, FetchResult } from "@apollo/client";
 import styled from "styled-components";
 import { Location } from "./MainPage";
+import Autocomplete from "react-autocomplete";
 
 interface LocationData {
   allLocations: Location[];
 }
 
-interface LocationResData {
-  data?: {
-    createLocation: Location;
-  };
-}
-interface UserResData {
-  data?: {
-    currentLocation?: Location;
-    locations?: Location[];
-  };
-}
-
-// class Foo {
-//   name?: string;
-//   age?: number;
-
-//   constructor(args: { name?: string; age?: number } = {}) {
-//     this.name = args.name;
-//     this.age = args.age;
-//   }
-// }
-
-
-interface UpdateUserConstructor{
+interface UpdateUserConstructor {
   locations?: number[];
   currentLocation?: number;
 }
@@ -39,9 +17,7 @@ class UpdateUserInput {
   locations?: number[];
   currentLocation?: number;
 
-  constructor(
-    updateUserConstructor: UpdateUserConstructor
-  ) {
+  constructor(updateUserConstructor: UpdateUserConstructor) {
     if (updateUserConstructor.locations) {
       this.locations = updateUserConstructor.locations;
     }
@@ -62,7 +38,12 @@ class CreateLocationInput {
 // updateUser mutation to add new location to user.locations or to update user.currentLocations
 const UPDATE_USER = gql`
   mutation updateUser($locations: [Int!], $currentLocation: Int) {
-    updateUser(locations: $locations, currentLocation: $currentLocation) {
+    updateUser(
+      updateUserInput: {
+        locations: $locations
+        currentLocation: $currentLocation
+      }
+    ) {
       locations {
         name
       }
@@ -94,52 +75,86 @@ const getLocations = gql`
 // GQL Queries
 
 interface locationProps {
-  locations: Location[];
+  userLocations: Location[];
   setLocations: React.Dispatch<React.SetStateAction<Location[]>>;
   currentLocation: Location;
   setCurrentLocation: React.Dispatch<React.SetStateAction<Location>>;
 }
 
 const Locations: React.FC<locationProps> = (props) => {
-  const {
-    locations,
-    setLocations,
-    currentLocation,
-    setCurrentLocation,
-  } = props;
+  const { userLocations, setLocations, currentLocation, setCurrentLocation } =
+    props;
   const [newLocationName, setNewLocationName] = useState<string>("");
   const [selectedLocation, setSelectedLocation] = useState<Location | null>();
   const [currentPopup, setCurrentPopup] = useState(false);
   const [popup, setPopup] = useState(false);
-  const [updateUser, { data: updateUserData }] = useMutation(UPDATE_USER);
-  const [createLocation, { data: createLocationData }] = useMutation(
-    CREATE_LOCATION
-  );
+  const [updateUser, { error: updateUserError }] = useMutation(UPDATE_USER);
+  const [createLocation, { error: createLocationError }] =
+    useMutation(CREATE_LOCATION);
   const [allLocations, setAllLocations] = useState<Location[]>([]);
-  const {
-    loading: locationLoading,
-    data: locationData,
-  } = useQuery<LocationData>(getLocations);
+  const { data: locationData } = useQuery<LocationData>(getLocations);
 
   useEffect(() => {
-    if (locationData?.allLocations) {
+    if (locationData) {
       setAllLocations(locationData.allLocations);
-      console.log(
-        "this should be locations from db",
-        locationData.allLocations
-      );
     }
-  }, [locationData?.allLocations]);
+  }, [locationData]);
 
   // TODO add location when you press enter
-  const addLocation: React.MouseEventHandler<HTMLInputElement> = async () => {
-    let locationRes: LocationResData;
+  // const addLocation: React.MouseEventHandler<HTMLInputElement> = async () => {
+  //   let locationRes: FetchResult<any, Record<string, any>, Record<string, any>>;
+  //   let createLocationInput: CreateLocationInput;
+  //   if (newLocationName !== "") {
+  //     createLocationInput = new CreateLocationInput({ name: newLocationName });
+  //     locationRes = await createLocation({
+  //       variables: { createLocationInput },
+  //     });
+  //     if (createLocationError) {
+  //       console.log("o snap error creating location: ", createLocationError);
+  //     }
+  //     if (locationRes.data) {
+  //       // use newLocation to createLocation, grab location.id and add to newLocations array, then update user
+  //       console.log("this is locationRes.data: ", locationRes.data);
+  //       const addLocation = new Location(
+  //         locationRes.data.createLocation.id,
+  //         locationRes.data.createLocation.name
+  //       );
+  //       const updatedLocations = [...userLocations, addLocation];
+  //       const locationIds: number[] = updatedLocations.map(
+  //         (location) => location.id
+  //       );
+  //       const updateUserInput = new UpdateUserInput({ locations: locationIds });
+  //       const userRes: FetchResult<
+  //         any,
+  //         Record<string, any>,
+  //         Record<string, any>
+  //       > = await updateUser({
+  //         variables: { updateUserInput },
+  //       });
+  //       if (userRes.data) {
+  //         //TODO - Probably should actually use data from userRes.data
+  //         setLocations(updatedLocations);
+  //         setNewLocationName("");
+  //       } else {
+  //         console.error("Update User Locations in DB Failed");
+  //       }
+  //     } else {
+  //       console.error("Add Location to DB Failed");
+  //     }
+  //   }
+  // };
+
+  const addLocationTest = async (value: string): Promise<void> => {
+    let locationRes: FetchResult<any, Record<string, any>, Record<string, any>>;
     let createLocationInput: CreateLocationInput;
     if (newLocationName !== "") {
       createLocationInput = new CreateLocationInput({ name: newLocationName });
       locationRes = await createLocation({
         variables: { createLocationInput },
       });
+      if (createLocationError) {
+        console.log("o snap error creating location: ", createLocationError);
+      }
       if (locationRes.data) {
         // use newLocation to createLocation, grab location.id and add to newLocations array, then update user
         console.log("this is locationRes.data: ", locationRes.data);
@@ -147,12 +162,16 @@ const Locations: React.FC<locationProps> = (props) => {
           locationRes.data.createLocation.id,
           locationRes.data.createLocation.name
         );
-        const updatedLocations = [...locations, addLocation];
+        const updatedLocations = [...userLocations, addLocation];
         const locationIds: number[] = updatedLocations.map(
           (location) => location.id
         );
-        const updateUserInput = new UpdateUserInput({locations: locationIds});
-        const userRes: UserResData = await updateUser({
+        const updateUserInput = new UpdateUserInput({ locations: locationIds });
+        const userRes: FetchResult<
+          any,
+          Record<string, any>,
+          Record<string, any>
+        > = await updateUser({
           variables: { updateUserInput },
         });
         if (userRes.data) {
@@ -168,60 +187,99 @@ const Locations: React.FC<locationProps> = (props) => {
     }
   };
 
-  const removeLocation = () => {
-    if (selectedLocation) {
-      console.log("removeLocation");
-      console.log("selectedLocation", selectedLocation);
-      console.log(
-        locations.filter((location) => location.id !== selectedLocation.id)
-      );
-      setLocations(
-        locations.filter((location) => location.id !== selectedLocation.id)
-      );
-      setPopup(false);
-    }
-  };
+
 
   // TODO - this doesn't need to grab value since I already set selectedLocation
-  const updateLocation: React.MouseEventHandler<HTMLButtonElement> = async (
-    e: React.MouseEvent
-  ) => {
-    const locationId: number = Number.parseInt(
-      (e.target as HTMLButtonElement).value
-    );
-    console.log("updateLocation", locationId);
-    const updateUserInput = new UpdateUserInput({currentLocation: locationId })
-    const res: UserResData = await updateUser({
+  const updateCurrentLocation = async (id: number) => {
+    console.log("updateCurrentLocation", id);
+    const updateUserInput = new UpdateUserInput({
+      currentLocation: id,
+    });
+    const res: FetchResult<
+      any,
+      Record<string, any>,
+      Record<string, any>
+    > = await updateUser({
       variables: updateUserInput,
     });
-    if (res.data?.currentLocation) {
-      console.log("this is res in updateLocation useMutation: ", res.data);
-      setCurrentLocation(res.data.currentLocation);
+    if (updateUserError) {
+      console.log("o snap Error: ", updateUserError);
+    }
+    if (res.data) {
+      console.log("res.data", res.data);
+      const newCurrentLocation = allLocations.filter(
+        (location) => location.id === id
+      )[0];
+      setCurrentLocation(newCurrentLocation);
+      setPopup(false);
+    }
+  };
+  const updateAllLocations = async (id: number, type: 'add' | 'remove') => {
+    console.log("updateAllLocations", id, type);
+    let updateUserInput: UpdateUserInput = {};
+    if (type === 'add') { updateUserInput = new UpdateUserInput(  {locations: [...userLocations.map(location => location.id), id ]})}
+      new UpdateUserInput({
+      currentLocation: id,
+      });
+    if ( type === 'remove') { updateUserInput = new UpdateUserInput({ locations: [...userLocations.filter(location => location.id !== id).map(location => location.id)]})}
+    const res: FetchResult<
+      any,
+      Record<string, any>,
+      Record<string, any>
+    > = await updateUser({
+      variables: updateUserInput,
+    });
+    if (updateUserError) {
+      console.log("o snap Error: ", updateUserError);
+    }
+    if (res.data) {
+      console.log("res.data", res.data);
+      const newCurrentLocation = allLocations.filter(
+        (location) => location.id === id
+      )[0];
+      setCurrentLocation(newCurrentLocation);
       setPopup(false);
     }
   };
 
-  const removeCurrentLocation = (e: any) => {
-    removeLocation();
-    updateLocation(e);
-  };
-
-  const createPopup: React.MouseEventHandler<HTMLLIElement> = (e: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
-    const locationString: string | null = (e.target as HTMLLIElement).getAttribute(
-      "value"
+  const handleCurrentLocationUpdate = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const locationId: number = Number.parseInt(
+      (e.target as HTMLSelectElement).value
     );
-    if (locationString) {
-      const locationId = Number.parseInt(locationString);
-      const locationObj = locations.find(location => location.id === locationId)
-      setSelectedLocation(locationObj)
-      setPopup(true);
-    } else {console.error('Could not find Location ID to Add Location')}
+    updateCurrentLocation(locationId);
+
+  }
+
+// How can I combine these two handlers? SHould I do that?
+
+  const removeLocation = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (selectedLocation) {
+      const locationId: number = Number.parseInt(
+        (e.target as HTMLSelectElement).value
+      );
+      setLocations(
+        userLocations.filter((location) => location.id !== locationId)
+      );
+      setPopup(false);
+    }
   };
 
-  const removeOptions = () => {
+  const removeCurrentLocation = (e: React.MouseEvent<HTMLSelectElement>) => {
+    const locationId: number = Number.parseInt(
+      (e.target as HTMLSelectElement).value
+    );
+    updateAllLocations(locationId, 'remove');
+    setLocations(
+      userLocations.filter((location) => location.id !== locationId)
+    );
+    setPopup(false);
+  };
+
+
+  const chooseNewCurrentLocation = () => {
     return (
-      <Select onChange={removeCurrentLocation}>
-        {locations.map((location) => (
+      <Select onSelect={removeCurrentLocation}>
+        {userLocations.filter(location => location.id !== currentLocation.id).map((location) => (
           <option key={location.id} value={location.id}>
             {location.name}
           </option>
@@ -229,16 +287,32 @@ const Locations: React.FC<locationProps> = (props) => {
       </Select>
     );
   };
-  // TODO - Add Types to All Elements
+
   const renderCurrentPopup = (): JSX.Element => {
     return (
       <PopupContainer>
         <PopupText>
           You are trying to remove the current location. Where are you now?
         </PopupText>
-        {removeOptions()}
+        {chooseNewCurrentLocation()}
       </PopupContainer>
     );
+  };
+
+  const createPopup = (e: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
+    const locationString: string | null = (
+      e.target as HTMLLIElement
+    ).getAttribute("value");
+    if (locationString) {
+      const locationId = Number.parseInt(locationString);
+      const locationObj = userLocations.find(
+        (location) => location.id === locationId
+      );
+      setSelectedLocation(locationObj);
+      setPopup(true);
+    } else {
+      console.error("Could not find Location ID to Add Location");
+    }
   };
 
   const renderPopup = (): JSX.Element => {
@@ -248,8 +322,8 @@ const Locations: React.FC<locationProps> = (props) => {
           <PopupText>
             What do you want to do to the location "{selectedLocation.name}"
           </PopupText>
-          <PopupButton onClick={updateLocation} value={selectedLocation.id}>
-            Update
+          <PopupButton onClick={handleCurrentLocationUpdate} value={selectedLocation.id}>
+            Update Current Location
           </PopupButton>
           <PopupButton onClick={removeLocation}>Remove</PopupButton>
         </PopupContainer>
@@ -260,14 +334,19 @@ const Locations: React.FC<locationProps> = (props) => {
   };
 
   const LocationItems = (): JSX.Element => {
-    const notCurrent = locations.filter(
+    const notCurrent = userLocations.filter(
       (location) => location.name !== currentLocation.name
     );
+
     const createCurrentPopup = (e: any) => {
-      let value = e.target.getAttribute("value");
-      console.log("value", value);
-      setSelectedLocation(e.target.getAttribute("value"));
-      setCurrentPopup(true);
+      let locationName = e.target.getAttribute("value");
+      const locationObj: Location | undefined = userLocations.find(
+        (location) => location.name === locationName
+      );
+      if (locationObj) {
+        setSelectedLocation(locationObj);
+        setCurrentPopup(true);
+      } else { console.error('Cant find Location')}
     };
 
     // Return a list of all locations, currentLocation will always be top because it has a different popup for removing
@@ -289,29 +368,64 @@ const Locations: React.FC<locationProps> = (props) => {
     );
   };
 
-  const handleLocationInput: React.ChangeEventHandler<HTMLInputElement> = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const locationName: string = (e.target as HTMLInputElement).value;
-    setNewLocationName(locationName);
-  };
+  const handleLocationInput: React.ChangeEventHandler<HTMLInputElement> =
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const locationName: string = (e.target as HTMLInputElement).value;
+      setNewLocationName(locationName);
+    };
 
-  const newLocationInput = () => {
+  const newLocationInput = (): JSX.Element => {
+    console.log(userLocations);
     return (
-      <Input
+      <Autocomplete
         key="newLocation"
-        type="text"
+        getItemValue={(item) => item.name}
+        items={userLocations}
+        renderItem={(item, isHighlighted): React.ReactNode => (
+          <div
+            style={{
+              background: isHighlighted ? "lightgray" : "transparent",
+              border: "2px solid green",
+              textAlign: "center",
+              fontFamily: "inherit",
+            }}
+          >
+            {item.name}
+          </div>
+        )}
+        renderMenu={(items) => {
+          return (
+            <div style={{ border: "2px solid aqua" }} children={items} />
+          );
+        }}
+        renderInput={(props) => {
+          return <input
+            style={{
+              border: 'none',
+              backgroundColor: 'transparent',
+              fontSize: 'inherit',
+              textAlign: 'center',
+              fontFamily: 'inherit',
+              color: 'inherit',
+            }}
+            placeholder="Add New Location"
+            {...props}
+          />;
+        }}
         value={newLocationName}
         onChange={handleLocationInput}
-        onClick={addLocation}
-        placeholder="Add Location"
+        onSelect={addLocationTest}
+        wrapperStyle={{
+          flex: 1,
+          border: " 2px solid orange",
+        }}
       />
     );
   };
 
-  const renderLocationsTool = () => {
+  const renderLocationsTool = (): JSX.Element => {
     if (popup) {
-      return <PopupContainer>{renderPopup()}</PopupContainer>;
+      return renderPopup();
     }
     if (currentPopup) {
       return <PopupContainer>{renderCurrentPopup()}</PopupContainer>;
@@ -367,19 +481,21 @@ const LocationsList = styled.div`
   }
 `;
 
-const Input = styled.input`
-  border: none;
-  /* border: 2px solid green; */
-  background-color: transparent;
-  font-size: inherit;
-  text-align: center;
-  &&::placeholder {
-    color: #ede0d4;
-    font-family: "Luminari";
-  }
-`;
+// const Input = styled.input`
+//   border: none;
+//   /* border: 2px solid green; */
+//   background-color: transparent;
+//   font-size: inherit;
+//   text-align: center;
+//   &&::placeholder {
+//     color: #ede0d4;
+//     font-family: "Luminari";
+//   }
+// `;
 
-const PopupContainer = styled.div``;
+const PopupContainer = styled.div`
+  flex: 9;
+`;
 
 const PopupText = styled.div``;
 const PopupButton = styled.button``;

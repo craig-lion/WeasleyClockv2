@@ -8,7 +8,7 @@ import { ActivityFeed } from "./ActivityFeed";
 
 //GraphQL Test
 
-import { useQuery, gql } from "@apollo/client";
+import { useLazyQuery, gql } from "@apollo/client";
 
 export interface User {
   id: number;
@@ -68,7 +68,11 @@ const GET_USER = gql`
 
 //GraphQL Test
 
-const MainPage = () => {
+interface MainPageProps {
+  clearStore: () => void;
+}
+
+const MainPage: React.FC<MainPageProps> = (props) => {
   //TODO - useState for userName should look for context
   const [userName , setUserName] = useState<string | null>(null)
   const [activeTool, setActiveTool] = useState("none");
@@ -77,41 +81,63 @@ const MainPage = () => {
     id: 0,
     name: "none",
   });
-  // TODO - friends should be typed as User not string
   const [friends, setFriends] = useState<User[]>([]);
-  // TODO - pendingFriends should be typed as User not string
   const [pendingFriends, setPendingFriends] = useState<User[]>([]);
+  const { clearStore } = props;
 
-  //GrapQl Test
+  //Test
+  const clearUserData = (): void => {
+    userData = undefined;
+    clearStore();
+    console.log('userData clearStore', userData, userName)
+  }
+
+  const updateStateVals = (stateUserData: UserData): void => {
+console.log(
+  "this should be user from db also USerNAme onCompleted",
+  stateUserData.user
+);
+const user = stateUserData.user[0];
+const currentLocation = user.currentLocation;
+const locations = user.locations.map((location) => location);
+//     // const friendsData = user.friends.accepted.map(friend => friend.recipient.name)
+//     // const pendingFriendsData = user.friends.pending.map(friend => friend.recipient.name)
+//     // console.log('locations from user.locations from db: ', locations)
+//     // console.log('friends from user.locations from db: ', friendsData)
+//     // console.log('pending friends from user.locations from db: ', pendingFriendsData)
+//     // console.log('currentLocation from user.locations from db: ', currentLocation)
+setCurrentLocation(currentLocation);
+setUserName(user.name);
+setFriends(user.friends.accepted);
+setPendingFriends(user.friends.pending);
+setLocations(locations);
+  }
+  //Test
+  //GrapQl
   // Need a useQuery that will check for JWT and reset userData if not present
-  const { loading: userLoading, data: userData } = useQuery<UserData>(GET_USER);
+  let [getUserData, { data: userData }] = useLazyQuery<UserData>(GET_USER, {
+    onCompleted: () => {
+      if (userData) {
+        console.log('its all happening fo realz');
+        updateStateVals(userData)
+      }
+    },
+    onError: (Error) => { console.log('Error: ', Error) },
+    fetchPolicy: 'no-cache',
+    
+  });
   // console.log("Loading Location: ", locationLoading);
   // console.log("if it worked Locations would be here: ", locationData?.allLocations);
-  console.log("Loading User: ", userLoading);
+  // console.log("Loading User: ", userLoading, "userName: ", userName, 'userData: ', userData);
   // console.log("if it worked User would be here: ", userData);
 
   useEffect(() => {
+    // console.log('useEffect userData PAWEES: ', userData, userName)
+    if (localStorage.getItem('token') && !userName) { getUserData(); }
 
-    if (userData) {
-      // console.log('this should be user from db', userData.user)
-      const user = userData.user[0]
-      const currentLocation = user.currentLocation
-      const locations = user.locations.map(location => location)
-      // const friendsData = user.friends.accepted.map(friend => friend.recipient.name)
-      // const pendingFriendsData = user.friends.pending.map(friend => friend.recipient.name)
-      // console.log('locations from user.locations from db: ', locations)
-      // console.log('friends from user.locations from db: ', friendsData)
-      // console.log('pending friends from user.locations from db: ', pendingFriendsData)
-      // console.log('currentLocation from user.locations from db: ', currentLocation)
-      setCurrentLocation(currentLocation);
-      setUserName(user.name);
-      setFriends(user.friends.accepted);
-      setPendingFriends(user.friends.pending);
-      setLocations(locations);
-    }
-  }, [userData]
+  }, [userData, getUserData, userName]
   )
-  //GrapQl Test
+  //GrapQl
 
 
   // ToDo - add interfacce to all mouseEvents
@@ -130,6 +156,8 @@ const MainPage = () => {
 
   const navPanelProps = {
     navigate,
+    setUserName,
+    clearUserData,
   };
 
   const toolBarProps = {
@@ -162,7 +190,8 @@ const MainPage = () => {
   };
 
   const loginProps = {
-    setUserName
+    setUserName,
+    getUserData,
   }
 
   //TODO - useQuery for user, if !user Login renders else rest renders
@@ -171,7 +200,7 @@ const MainPage = () => {
     if (activeTool === "none") {
       return (
         <NavPanelContainer>
-          {userName && <NavPanel {...navPanelProps} />}
+          {userData && <NavPanel {...navPanelProps} />}
         </NavPanelContainer>
       );
     }
@@ -186,7 +215,7 @@ const MainPage = () => {
       case "adventures":
         return (
           <ToolPanelContainer>
-            {userName && <ToolPanel {...toolBarProps} />}
+            {userData && <ToolPanel {...toolBarProps} />}
           </ToolPanelContainer>
         );
     }
@@ -202,7 +231,7 @@ const MainPage = () => {
     // console.log(userData)
       return (
       <ClockContainer>
-        {userName && <Clock {...clockProps} />}
+        {userData && <Clock {...clockProps} />}
       </ClockContainer>
       )
   }
@@ -210,7 +239,7 @@ const MainPage = () => {
   const renderActivityFeed = () => {
     return (
       <RightSideContainer>
-        {userName && <ActivityFeed {...activityFeedProps}/>}
+        {userData && <ActivityFeed {...activityFeedProps}/>}
       </RightSideContainer>
     )
   }
@@ -219,7 +248,7 @@ const MainPage = () => {
     <MainContainer>
       {renderNavPanelContainer()}
       {renderToolPanel()}
-      {!userName && renderLogin()}
+      {!userData && renderLogin()}
       {renderClock()}
       {renderActivityFeed()}
       <TopBarContainer>You're a Wizard {userName}</TopBarContainer>

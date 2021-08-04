@@ -1,11 +1,20 @@
 import React from "react";
 import styled from "styled-components";
-import { ClockProps } from "./Clock";
+import { Location, User } from "./MainPage";
 
 class Labels {
   locationLabels: JSX.Element[] = [];
   friendLabels: JSX.Element[] = [];
   userLabel: JSX.Element[] = [];
+}
+
+interface ClockLabelProps {
+  friends: User[],
+  currentLocation: Location,
+  userName: string | null,
+  renderLocations: Location[],
+  userColor: any,
+  colorArray: any
 }
 
 // TODO - change constructor to (private x:number) and remove this.x
@@ -21,9 +30,9 @@ export class PlacementPoints {
   }
 }
 
-export const ClockLabels = (props: ClockProps, userColor: string, colorArray: string[]): Labels => {
-  const { locations, friends, currentLocation, userName } = props;
-  const radiansBetweenLocations = (2 * Math.PI) / locations.length;
+export const ClockLabels = (clockLabelProps: ClockLabelProps): Labels => {
+  const { renderLocations, friends, currentLocation, userName, userColor, colorArray } = clockLabelProps;
+  const radiansBetweenLocations = (2 * Math.PI) / renderLocations.length;
   const placementPoints = new PlacementPoints();
   // console.log('these are friends: ', friends)
 
@@ -43,7 +52,7 @@ export const ClockLabels = (props: ClockProps, userColor: string, colorArray: st
     return array;
   };
   const labels = new Labels();
-  for (let i = 0; i < locations.length; i++) {
+  for (let i = 0; i < renderLocations.length; i++) {
     let radian = radiansBetweenLocations * i;
     let points = getPointOnCircle(
       [placementPoints.x, placementPoints.y],
@@ -57,7 +66,7 @@ export const ClockLabels = (props: ClockProps, userColor: string, colorArray: st
     const labelWidth = 30;
     let heightAdjust = labelHeight / 2;
     let widthAdjust = labelWidth / 2;
-    //  console.log("this are points: ", points[0], "x", points[1], "y", locations[i]);
+    //  console.log("this are points: ", points[0], "x", points[1], "y", renderLocations[i]);
 
     // TODO place label properly at 6 clock position
     if (yAxis === 0) {
@@ -75,17 +84,17 @@ export const ClockLabels = (props: ClockProps, userColor: string, colorArray: st
 
     const locationLabel: JSX.Element = (
       <LocationLable
-        key={locations[i].id}
+        key={renderLocations[i].id}
         x={xAxis - widthAdjust}
         y={yAxis - heightAdjust}
         width={labelWidth}
         height={labelHeight}
       >
-        <p>{locations[i].name}</p>
+        <p>{renderLocations[i].name}</p>
       </LocationLable>
     );
     labels.locationLabels.push(locationLabel);
-    if (locations[i].id === currentLocation.id) {
+    if (renderLocations[i].id === currentLocation.id) {
       const userAdjust = 10
       const userLabel: JSX.Element = (
         <FriendLabel
@@ -103,9 +112,9 @@ export const ClockLabels = (props: ClockProps, userColor: string, colorArray: st
     }
     let count = 0;
     for (let j = 0; j < friends.length; j++) {
-      if (locations[i].id === friends[j].currentLocation.id) {
+      if (renderLocations[i].id === friends[j].currentLocation.id) {
         const friendAdjust = (3 * count);
-        console.log('this should now be happening', locations[i].name, count, friendAdjust)
+        // console.log('this should now be HAPPENING', renderLocations[i].name, count, friendAdjust)
         const friendLabel: JSX.Element = (
           <FriendLabel  
             key={friends[j].id}

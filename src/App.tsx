@@ -30,12 +30,21 @@ const client = new ApolloClient({
 });
 // Attempt to create GraphQl client
 
+const clearStore = async (): Promise<void> => {
+  await client.clearStore();
+  console.log(client.cache)
+}
+
+const mainPageProps = {
+  clearStore
+}
+
 function App() {
   return (
     <ApolloProvider client={client}>
       <div className="App">
         <header className="App-header">
-          <MainPage />
+          <MainPage {...mainPageProps} />
         </header>
       </div>
     </ApolloProvider>

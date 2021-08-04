@@ -34,12 +34,13 @@ const ToolPanel: React.FC<toolBarProps> = (props) => {
     userName,
   } = props;
 
+
+
   const locationProps = {
-    locations,
+    userLocations: locations,
     setLocations,
     currentLocation,
     setCurrentLocation,
-
   };
 
   const friendsProps = {

@@ -31,12 +31,28 @@ export interface ClockProps {
 }
 
 const Clock: React.FC<ClockProps> = (clockProps) => {
-  const { locations, currentLocation, friends } = clockProps;
+  const { locations, currentLocation, friends, userName } = clockProps;
   const colorArray: string[] = [];
   for (let i = 0; i < friends.length; i++){
     colorArray.push(randomColor())
   }
   const userColor = randomColor()
+
+  const friendLocations: Location[] = ((): Location[] => {
+    const locationsArray: Location[] = [];
+    friends.forEach((friend) => {
+      const locationsIncludes = locations.some(location => location.id === friend.currentLocation.id);
+      const locationsArrayIncludes = locationsArray.some(
+        (location) => location.id === friend.currentLocation.id
+      );
+
+      if (!locationsIncludes && !locationsArrayIncludes) {
+        locationsArray.push(friend.currentLocation);
+      }
+    });
+    return locationsArray;
+  })();
+
   
   // class Coordinates {
   //     x: number;
@@ -116,7 +132,15 @@ const Clock: React.FC<ClockProps> = (clockProps) => {
     return friendArmElements;
   };
 
-  const clockLabels = ClockLabels(clockProps, userColor, colorArray)
+  const clockLabelProps = {
+    friends,
+    currentLocation,
+    userName,
+    renderLocations: [...locations, ...friendLocations],
+    userColor,
+    colorArray
+  }
+  const clockLabels = ClockLabels(clockLabelProps)
 
   return (
     <ClockMainContainer>

@@ -5,14 +5,25 @@ import styled from "styled-components";
 
 interface navPanelProps {
   navigate: React.MouseEventHandler<Element>;
+  setUserName: React.Dispatch<React.SetStateAction<string | null>>;
+  clearUserData: () => void;
 }
 
 const NavPanel:React.FC<navPanelProps> = (props) => {
 
-  const { navigate } = props;
+  const { navigate, setUserName, clearUserData } = props;
+
+  const handleSignout = (): void => {
+    console.log('this is doing stuff')
+    localStorage.removeItem('token');
+    clearUserData();
+    setUserName(null);
+
+  }
 
   return (
     <NavPanelMain>
+      <SignOut onClick={handleSignout}>Sign Out</SignOut>
         <li id="clock" onClick={navigate}>Clock</li>
         <li id="friends" onClick={navigate}>Friends</li>
         <li id="locations" onClick={navigate}>Locations</li>
@@ -35,4 +46,9 @@ const NavPanel:React.FC<navPanelProps> = (props) => {
     }
   `;
 
+const SignOut = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+`;
 export default NavPanel;

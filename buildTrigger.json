@@ -1,0 +1,14 @@
+[
+  "trigger",
+  "/Users/lion/Desktop/WeasleyClockV2/March 20201/WeasleyClockv2",
+  {
+    "name": "build",
+    "expression": [
+      "anyof",
+      ["match", "src/*.ts", "wholename"],
+      ["match", "src/*.tsx", "wholename"]
+    ],
+    "command": ["run", "watchman"],
+    "append_files": true
+  }
+]

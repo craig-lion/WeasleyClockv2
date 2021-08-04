@@ -3,11 +3,13 @@ import styled from "styled-components";
 
 //GraphQL Test
 
-import { useMutation, gql } from "@apollo/client";
+import { useMutation, gql, QueryLazyOptions, OperationVariables } from "@apollo/client";
+import { UserData } from "./MainPage";
 
 
 interface LoginProps {
   setUserName: React.Dispatch<React.SetStateAction<string | null>>;
+  getUserData: (options?: QueryLazyOptions<OperationVariables> | undefined) => void
 }
 
 const LOGIN = gql`
@@ -24,7 +26,7 @@ export const Login:React.FC<LoginProps> = (props) => {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [login, { data }] = useMutation(LOGIN);
-  const {setUserName} = props
+  const { setUserName, getUserData } = props
   if (data) {
     //add jwt to localStorage
     localStorage.setItem('token', data.login.token);
@@ -34,43 +36,60 @@ export const Login:React.FC<LoginProps> = (props) => {
   const loginUser: React.MouseEventHandler<HTMLButtonElement> = async () => {
     console.log(`Trying to login ${name} with password: ${password}`);
     const res = await login({ variables: { password, name } });
-    console.log('this should be a jwt: ', res)
+    console.log('this should be a jwt: ', res !== undefined)
     // GraphQL login mutation should return jwt
-    setUserName(name)
+    await getUserData();
+    // Test to move setUserNane back to MainPage
+    setUserName(name);
     // ResetUser + Pass input
     setName("");
     setPassword("");
   };
-  const newUser = () => {
+  const createNewUser = () => {
     console.log(`Trying to create ${name} with password: ${password}`);
-    // GraphQL newUser mutation returns jwt
+    // GraphQL createNewUser mutation returns jwt
     setName("");
     setPassword("");
   };
 
   const loginButton = () => {
-    return <Button onClick={loginUser}>Login</Button>;
+    return <Button type="submit" onClick={loginUser}>Login</Button>;
   };
   const newUserButton = () => {
-    return <Button onClick={newUser}>Create New Wizard</Button>;
+    return <Button onClick={createNewUser}>Create New Wizard</Button>;
   };
 
-  console.log(name);
-  console.log(password);
+  // console.log(name);
+  // console.log(password);
+  
+  const userNameHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+  }
+  
+  const passwordHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  }
 
   return (
-    <LoginMain>
+    <LoginMain
+      className="LoginMain"
+      onSubmit={(e) => {
+        // TODO - check to see if this onsubmit is actually doing anything or if just changing the button type to submit is enough
+        e.preventDefault();
+        console.log("o this submit work too");
+      }}
+    >
       <InputContainer>
         <Input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="UserName"
+          onChange={userNameHandler}
+          placeholder="UserNamE"
         />
         <Input
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={passwordHandler}
           placeholder="Password"
         />
       </InputContainer>
@@ -82,7 +101,7 @@ export const Login:React.FC<LoginProps> = (props) => {
   );
 };
 
-const LoginMain = styled.div`
+const LoginMain = styled.form`
   background-color: blanchedalmond;
   display: flex;
   flex-direction: column;

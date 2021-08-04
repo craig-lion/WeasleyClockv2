@@ -34,7 +34,7 @@ const HANDLE_FRIEND_REQUEST = gql`
 export const ActivityFeed: React.FC<ActivityFeedProps> = (props) => {
   const { pendingFriends, friends, setFriends, setPendingFriends } = props;
   // TODO - should use data from res to update state
-  const [updateFriendRequest, { data: updateFriendRequestData }] = useMutation(HANDLE_FRIEND_REQUEST);
+  const [updateFriendRequest, { error: updateFriendRequestError }] = useMutation(HANDLE_FRIEND_REQUEST);
   //TODO - accept/reject need to grab createdBy to update db
 
   const acceptFriend: React.MouseEventHandler<HTMLButtonElement> = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -45,6 +45,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = (props) => {
     const res = await updateFriendRequest({ variables: { updateFriendRequestInput } })
     let addFriend: User | undefined;
     let updatedPendingFriends: User[] | undefined;
+    if (updateFriendRequestError) { console.log('Error', updateFriendRequestError)}
     if (res) {
       updatedPendingFriends = (pendingFriends.filter(friend => friend.id !== friendId))
       addFriend = pendingFriends.find((friend) => friend.id === friendId);
@@ -84,34 +85,41 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = (props) => {
   };
 
   const renderRequests = (): JSX.Element[] => {
-    const requestList = pendingFriends.map((req) => {
-      return (
-        <ItemBox>
-          <BoxRequestText>
-            {req.name} would like to be your friend
-          </BoxRequestText>
-          <AcceptButton onClick={acceptFriend} value={req.id}>Accept</AcceptButton>
-          <RejectButton onClick={rejectFriend} value={req.id}>Reject</RejectButton>
-        </ItemBox>
-      );
-    });
-    return requestList;
+
+    // TODO: TAKE THIS BULLSHIT OUT
+    if (!pendingFriends) {
+      return [<ItemBox>No Pending Requests</ItemBox>]
+    } else {
+
+      const requestList = pendingFriends.map((req) => {
+        return (
+          <ItemBox>
+            <BoxRequestText>
+              {req.name} would like to be your friend
+            </BoxRequestText>
+            <AcceptButton onClick={acceptFriend} value={req.id}>Accept</AcceptButton>
+            <RejectButton onClick={rejectFriend} value={req.id}>Reject</RejectButton>
+          </ItemBox>
+        );
+      });
+      return requestList;
+    }
   };
 
-  const renderUpdates = () => {
+  // const renderUpdates = () => {
 
   
-    const updateList = friends.map((friend) => {
-      return (
-        <ItemBox>
-          <BoxUpdateText>
-            Your Friend {friend.name} is at {friend.currentLocation.name}
-          </BoxUpdateText>
-        </ItemBox>
-      );
-    });
-    return updateList;
-  };
+  //   const updateList = friends.map((friend) => {
+  //     return (
+  //       <ItemBox>
+  //         <BoxUpdateText>
+  //           Your Friend {friend.name} is at {friend.currentLocation.name}
+  //         </BoxUpdateText>
+  //       </ItemBox>
+  //     );
+  //   });
+  //   return updateList;
+  // };
 
   return (
     <ActivityMain>
@@ -156,11 +164,11 @@ const BoxRequestText = styled.div`
   grid-row: 1/2;
 `;
 
-const BoxUpdateText = styled.div`
-  /* border: 2px dashed red; */
-  grid-column: 1/-1;
-  grid-row:1/-1;
-`;
+// const BoxUpdateText = styled.div`
+//   /* border: 2px dashed red; */
+//   grid-column: 1/-1;
+//   grid-row:1/-1;
+// `;
 
 const AcceptButton = styled.button`
   font-family: inherit;

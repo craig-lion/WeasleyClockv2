@@ -25,7 +25,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "build:watch": "npm run build -- -w"
+    "build:watch": "npm run build -- -w",
+    "watchman": "react-scripts build && cp -R ./build ../weasley-clock-backend/",
+    "copy": "cp -R ./build ../weasley-clock-backend/client"
   },
   "eslintConfig": {
     "extends": [
