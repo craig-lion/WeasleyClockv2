@@ -25,6 +25,7 @@ export interface UserData {
 export class Location {
   id: number;
   name: string;
+  privacy?: 'public'| 'private' | 'friends';
   constructor(id: number, name: string) {
     this.id = id;
     this.name = name;
@@ -39,6 +40,7 @@ const GET_USER = gql`
       locations {
         id
         name
+        privacy
       }
       currentLocation {
         id

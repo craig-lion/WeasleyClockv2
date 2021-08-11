@@ -4,7 +4,7 @@ import styled from "styled-components";
 //GraphQL Test
 
 import { useMutation, gql, QueryLazyOptions, OperationVariables } from "@apollo/client";
-import { UserData } from "./MainPage";
+// import { UserData } from "./MainPage";
 
 
 interface LoginProps {
