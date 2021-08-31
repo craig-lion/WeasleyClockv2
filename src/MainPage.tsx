@@ -120,7 +120,7 @@ setLocations(locations);
   let [getUserData, { data: userData }] = useLazyQuery<UserData>(GET_USER, {
     onCompleted: () => {
       if (userData) {
-        console.log('its all happening fo realz');
+        console.log('its all happening FO realz');
         updateStateVals(userData)
       }
     },

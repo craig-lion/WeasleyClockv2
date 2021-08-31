@@ -4,7 +4,7 @@ import { Location } from "./MainPage";
 
 
 interface AutocompleteProps {
-  userLocations: Location[];
+  allLocations: Location[];
   setNewLocationName: React.Dispatch<React.SetStateAction<string>>;
   addLocation: (value: string) => Promise<Location | string>;
   newLocationName: string;
@@ -15,9 +15,9 @@ interface AutocompleteProps {
 export const AutocompleteInput = (
   autocompleteProps: AutocompleteProps
 ): JSX.Element => {
-  const { userLocations, setNewLocationName, addLocation, newLocationName, updateAllLocations } =
+  const { setNewLocationName, addLocation, newLocationName, updateAllLocations, allLocations } =
     autocompleteProps;
-  // console.log(userLocations);
+  console.log('HERE IS all Locations: ', allLocations);
 
   const handleLocationInput: React.ChangeEventHandler<HTMLInputElement> =
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,7 +51,7 @@ export const AutocompleteInput = (
     <Autocomplete
       key="newLocation"
       getItemValue={(item) => item.name}
-      items={userLocations}
+      items={allLocations}
       renderItem={(item, isHighlighted): React.ReactNode => (
         <div
           style={{

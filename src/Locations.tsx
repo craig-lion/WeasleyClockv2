@@ -5,7 +5,7 @@ import { Location } from "./MainPage";
 import { AutocompleteInput } from "./Autocomplete";
 
 interface LocationData {
-  allLocations: Location[];
+  friendAndPublicLocations: Location[];
 }
 
 interface NewLocationData {
@@ -99,13 +99,19 @@ const Locations: React.FC<locationProps> = (props) => {
 
   useEffect(() => {
     if (locationData) {
-      setAllLocations(locationData.allLocations);
+      setAllLocations(locationData.friendAndPublicLocations);
     }
   }, [locationData]);
 
   // TODO - this doesn't need to grab value since I already set selectedLocation
   const updateCurrentLocation = async (id: number) => {
     console.log("updateCurrentLocation", id);
+    const newCurrentLocation: Location = userLocations.filter(
+      (location) => location.id === id
+    )[0];
+    console.log('newCurrentLocation: ', newCurrentLocation);
+    setCurrentLocation(newCurrentLocation);
+    setPopup(false);
     const updateUserInput = new UpdateUserInput({
       currentLocation: id,
     });
@@ -121,13 +127,9 @@ const Locations: React.FC<locationProps> = (props) => {
     }
     if (res.data) {
       console.log("res.data", res.data);
-      const newCurrentLocation = allLocations.filter(
-        (location) => location.id === id
-      )[0];
-      setCurrentLocation(newCurrentLocation);
-      setPopup(false);
     }
   };
+
   const updateAllLocations = async (
     location: Location,
     type: "add" | "remove"
@@ -334,6 +336,8 @@ const Locations: React.FC<locationProps> = (props) => {
       }
     };
 
+
+
     // Return a list of all locations, currentLocation will always be top because it has a different popup for removing
     return (
       <ul>
@@ -352,13 +356,13 @@ const Locations: React.FC<locationProps> = (props) => {
       </ul>
     );
   };
-
+  console.log('but are we sending it?: ', allLocations)
   const autocompleteProps = {
-    userLocations,
     addLocation,
     setNewLocationName,
     newLocationName,
     updateAllLocations,
+    allLocations,
   };
 
   const renderLocationsTool = (): JSX.Element => {

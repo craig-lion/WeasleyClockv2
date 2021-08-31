@@ -124,6 +124,7 @@ const Clock: React.FC<ClockProps> = (clockProps) => {
   const makeFriendArms = (): JSX.Element[] => {
     const friendArmElements: JSX.Element[] = [];
     for (let i = 0; i < friends.length; i++) {
+      // console.log('friends[i]: ', friends[i])
       const rotate = placeArm(friends[i].currentLocation.name);
       friendArmElements.push(
         rotateComponent(rotate, colorArray[i])

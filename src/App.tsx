@@ -27,26 +27,26 @@ const authLink = setContext((_, { headers }) => {
 });
 
 // Attempt to make WebSocket
-const wsLink = new WebSocketLink({
-  uri: "ws://localhost:4000/subscriptions",
-  options: {
-    reconnect: true,
-    connectionParams: {
-      authToken: authLink,
-    }
-  }
-});
+// const wsLink = new WebSocketLink({
+//   uri: "ws://localhost:4000/subscriptions",
+//   options: {
+//     reconnect: true,
+//     connectionParams: {
+//       authToken: authLink,
+//     }
+//   }
+// });
 
-const splitLink = split(({ query }) => {
-  const definition = getMainDefinition(query);
-  return (
-    definition.kind === 'OperationDefinition' &&
-    definition.operation === 'subscription'
-  );
-},
-  wsLink,
-  httpLink,
-);
+// const splitLink = split(({ query }) => {
+//   const definition = getMainDefinition(query);
+//   return (
+//     definition.kind === 'OperationDefinition' &&
+//     definition.operation === 'subscription'
+//   );
+// },
+//   wsLink,
+//   httpLink,
+// );
 
 // const client = new ApolloClient({
 //   uri: "http://localhost:3000/graphql",
